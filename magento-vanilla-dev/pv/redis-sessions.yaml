@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: redis-sessions-pv
+  labels:
+    type: local
+spec:
+  capacity:
+    storage: 1Gi
+  # Set scn to mount from home
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    #path: "/tmp/data"
+    path: "/hosthome/sam/var/data/k8s/magento-vanilla-dev/pv/redis-sessions"

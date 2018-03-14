@@ -1,0 +1,59 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: php-fpm-deployment
+  labels:
+    app: php-fpm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: php-fpm
+  template:
+    metadata:
+      labels:
+        app: php-fpm
+    spec:
+      volumes:
+      - name: webroot-persistent-storage
+        persistentVolumeClaim:
+          claimName: webroot-pvc
+      containers:
+      - name: php-fpm
+        image: docker.io/alphasocket/php-fpm-alpine:7.1
+        imagePullPolicy: Always
+        env:
+          - name: CONFIG_GROUPS_MAIN_NAME
+            value: magento
+          - name: CONFIG_GROUPS_MAIN_ID
+            value: "1500"
+          - name: CONFIG_GROUPS_ADDITIONAL_NAME
+            value: www-data
+          - name: CONFIG_GROUPS_ADDITIONAL_ID
+            value: "1550"
+          - name: CONFIG_USERS_MAIN_NAME
+            value: "www-data"
+          - name: CONFIG_USERS_MAIN_GROUPS
+            value: "magento www-data"
+          - name: CONFIG_PHP_FPM_HOST
+            value: "php-fpm.service"
+        ports:
+        - containerPort: 9000
+        volumeMounts:
+        - mountPath: "/var/www/html"
+          name: webroot-persistent-storage
+          
+        readinessProbe:
+          exec:
+            command:
+              - /usr/local/bin/docker-rediness-test
+          initialDelaySeconds: 20
+          periodSeconds: 20
+          failureThreshold: 5
+        
+        livenessProbe:
+          exec:
+            command:
+            - /usr/local/bin/docker-liveness-test
+          initialDelaySeconds: 10
+          periodSeconds: 5

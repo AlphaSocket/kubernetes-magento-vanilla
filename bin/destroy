@@ -1,0 +1,5 @@
+#!/bin/sh
+ABSPATH=$(readlink -f $0)
+ABSDIR=$(dirname $ABSPATH)
+ACTION=$(basename $0)
+$ABSDIR/main $ACTION $@

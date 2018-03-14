@@ -1,0 +1,95 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: magento-deployment
+  namespace: magento-vanilla
+  labels:
+    app: magento-vanilla
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: magento-vanilla
+  template:
+    metadata:
+      labels:
+        app: magento-vanilla
+    spec:
+      volumes:
+      - name: webroot-persistent-storage
+        persistentVolumeClaim:
+          claimName: magento-pv-claim
+      containers:
+      - name: magento-vanilla
+        image: alphasocket/magento-vanilla:latest-cached
+        imagePullPolicy: Always
+        env:
+        - name: CONFIG_GROUPS_MAIN_NAME
+          value: magento
+        - name: CONFIG_GROUPS_MAIN_ID
+          value: "1500"
+        - name: CONFIG_USERS_MAIN_NAME
+          value: "magento-cli"
+        - name: CONFIG_USERS_MAIN_GROUPS
+          value: "magento"
+        - name: CONFIG_MAGENTO_URL
+          value: http://local.magento.vanilla/
+        - name: CONFIG_DB_HOST
+          value: mariadb-service
+        - name: CONFIG_DB_NAME
+          valueFrom: 
+            secretKeyRef:
+              name: magento-secrets
+              key: db_name
+        - name: CONFIG_DB_USER
+          valueFrom: 
+            secretKeyRef:
+              name: database-secrets
+              key: user
+        - name: CONFIG_DB_PASS
+          valueFrom: 
+            secretKeyRef:
+              name: database-secrets
+              key: pass
+        - name: CONFIG_SAMPLE_DATA_INSTALL
+          value: 'True'
+        - name: CONFIG_REDIS_ENABLED
+          value: 'True'
+        - name: CONFIG_REDIS_HOST
+          value: redis-service
+        - name: CONFIG_REDIS_PASS
+          valueFrom: 
+            secretKeyRef:
+              name: redis-secrets
+              key: password
+        - name: CONFIG_TURPENTINE_ENABLED
+          value: 'True'
+        - name: CONFIG_TURPENTINE_BACKEND_HOST
+          value: httpd-service
+        - name: CONFIG_TURPENTINE_BACKEND_PORT
+          value: "80"
+        - name: CONFIG_TURPENTINE_BACKEND_CONTROL_PANEL_HOST
+          value: varnish-admin-service
+        - name: CONFIG_TURPENTINE_AUTH_KEY
+          valueFrom: 
+            secretKeyRef:
+              name: varnish-secrets
+              key: auth_key
+        volumeMounts:
+        - mountPath: "/var/www/html"
+          name: webroot-persistent-storage
+          
+        readinessProbe:
+          exec:
+            command:
+              - /usr/local/bin/docker-rediness-test
+          initialDelaySeconds: 300
+          periodSeconds: 20
+          failureThreshold: 5
+        
+        livenessProbe:
+          exec:
+            command:
+            - /usr/local/bin/docker-liveness-test
+          initialDelaySeconds: 380
+          periodSeconds: 10

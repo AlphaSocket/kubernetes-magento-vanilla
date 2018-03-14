@@ -1,0 +1,51 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: mariadb-deployment
+  labels:
+    app: mariadb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mariadb
+  template:
+    metadata:
+      labels:
+        app: mariadb
+    spec:
+      containers:
+      - name: mariadb
+        image: alphasocket/maria-db-alpine:latest
+        imagePullPolicy: Always
+        env:
+        - name: MYSQL_DATABASE
+          valueFrom: 
+            secretKeyRef:
+              name: database-secrets
+              key: name
+        - name: MYSQL_USER
+          valueFrom: 
+            secretKeyRef:
+              name: database-secrets
+              key: user
+        - name: MYSQL_PASSWORD
+          valueFrom: 
+            secretKeyRef:
+              name: database-secrets
+              key: pass
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: database-secrets
+              key: root-pass
+        ports:
+        - containerPort: 3306
+        volumeMounts:
+        - mountPath: "/var/lib/mysql"
+          name: mariadb-pv-storage
+      volumes:
+      - name: mariadb-pv-storage
+        persistentVolumeClaim:
+          claimName: database-pvc
+      

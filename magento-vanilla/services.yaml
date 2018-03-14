@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: php-fpm-service
+spec:
+  ports:
+    - port: 9000
+  selector:
+    app: php-fpm
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb-service
+spec:
+  ports:
+    - port: 3306
+  selector:
+    app: mariadb
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: varnish-service
+  namespace: magento-vanilla
+spec:
+  ports:
+    - port: 80
+  selector:
+    app: varnish
+    
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: varnish-admin-service
+  namespace: magento-vanilla
+spec:
+  ports:
+    - port: 6082
+  selector:
+    app: varnish
+    
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpd-service
+  namespace: magento-vanilla
+spec:
+  ports:
+    - port: 80
+  selector:
+    app: httpd
+  
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+spec:
+  ports:
+    - port: 6379
+  selector:
+    app: redis

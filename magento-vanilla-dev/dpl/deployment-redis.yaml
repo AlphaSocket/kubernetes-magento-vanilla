@@ -1,0 +1,54 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: redis-deployment
+  labels:
+    app: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      volumes:
+      - name: sessions-persistent-storage
+        persistentVolumeClaim:
+          claimName: redis-sessions-pvc
+      containers:
+      - name: redis
+        image: docker.io/alphasocket/redis-alpine:latest
+        imagePullPolicy: Always
+        env:
+        - name: CONFIG_REDIS_PERSISTENCE
+          value: 'yes'
+        - name: CONFIG_REDIS_PASS
+          valueFrom:
+            secretKeyRef:
+              name: redis-secrets
+              key: password
+        ports:
+        - containerPort: 6379
+        volumeMounts:
+        - mountPath: "/data"
+          name: sessions-persistent-storage
+          
+        readinessProbe:
+          exec:
+            command:
+              - /usr/local/bin/docker-rediness-test
+          initialDelaySeconds: 20
+          periodSeconds: 20
+          failureThreshold: 5
+        
+        livenessProbe:
+          exec:
+            command:
+            - /usr/local/bin/docker-liveness-test
+          initialDelaySeconds: 10
+          periodSeconds: 5
+      
+

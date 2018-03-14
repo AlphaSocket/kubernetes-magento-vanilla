@@ -1,0 +1,51 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: varnish-deployment
+  labels:
+    app: varnish
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: varnish
+  template:
+    metadata:
+      labels:
+        app: varnish
+    spec:
+      containers:
+      - name: varnish
+        image: docker.io/alphasocket/varnish-alpine:latest-controlled
+        imagePullPolicy: Always
+        env:
+        - name: CONFIG_VARNISH_BACKEND_ADDRESS
+          value: httpd-service
+        #- name: CONFIG_VARNISH_MEMORY
+        #  value: "512m"
+        - name: CONFIG_VARNISH_AUTH_KEY
+          valueFrom: 
+            secretKeyRef:
+              name: varnish-secrets
+              key: auth_key
+        ports:
+        - containerPort: 80
+          name: production
+        - containerPort: 6082
+          name: control-panel
+          
+        readinessProbe:
+          exec:
+            command:
+              - /usr/local/bin/docker-rediness-test
+          initialDelaySeconds: 20
+          periodSeconds: 20
+          failureThreshold: 5
+        
+        livenessProbe:
+          exec:
+            command:
+            - /usr/local/bin/docker-liveness-test
+          initialDelaySeconds: 10
+          periodSeconds: 5
+

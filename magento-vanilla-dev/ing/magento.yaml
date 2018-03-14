@@ -1,0 +1,17 @@
+#
+# Main http ingress
+#
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: magento-ingress
+spec:
+  rules:
+  - host: local.magento.vanilla
+    http:
+      paths:
+      - path: /
+        backend:
+          #serviceName: httpd-service
+          serviceName: varnish-service
+          servicePort: 80

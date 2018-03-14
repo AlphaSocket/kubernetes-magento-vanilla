@@ -1,0 +1,40 @@
+#!/bin/bash
+
+set -e
+
+ACTION="$1"
+DEFAULT_NAMESPACE='magento-vanilla'
+NAMESPACE=${2:-$DEFAULT_NAMESPACE}
+NAMESPACE_FOLDER="${PWD}/$NAMESPACE"
+
+DRY_COMMAND="kubectl create --dry-run=true --recursive=true --namespace=$NAMESPACE -f $NAMESPACE_FOLDER/."
+
+declare -A COMMANDS 
+COMMANDS['deploy']="kubectl apply --recursive=true --namespace=$NAMESPACE -f $NAMESPACE_FOLDER"
+COMMANDS['destroy']="kubectl delete --recursive=true --namespace=$NAMESPACE -f $NAMESPACE_FOLDER"
+MAIN_COMMAND="${COMMANDS[$ACTION]}"
+
+# Create namespaces
+kubectl apply -f ./namespaces.yaml
+
+# Search source
+if [ ! -d "$NAMESPACE_FOLDER" ]; then
+    echo "Can't find namespace folder";
+    exit 1;
+# Search namespace on cluster
+elif ! kubectl get ns $NAMESPACE &> /dev/null; then
+    echo "Namespace not declared on cluster";
+    exit 1;
+# Validation
+else
+    VALIDATION_ERRORS="$($DRY_COMMAND 1> /dev/null)";
+    #if [ $VALIDATION_EXIT_CODE -eq 0 ];
+    if [ ! -z "$VALIDATION_ERRORS" ]; then
+        # Show errors
+        echo "Can't deploy:\n$VALIDATION_ERRORS";
+        exit 1;
+    fi
+fi
+
+# Deploy
+$MAIN_COMMAND

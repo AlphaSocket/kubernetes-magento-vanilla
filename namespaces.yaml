@@ -1,0 +1,15 @@
+kind: Namespace
+apiVersion: "v1"
+metadata:
+    name: "magento-vanilla"
+    labels:
+        name: "magento-vanilla"
+        
+---
+
+kind: Namespace
+apiVersion: "v1"
+metadata:
+    name: "magento-vanilla-dev"
+    labels:
+        name: "magento-vanilla-dev"
